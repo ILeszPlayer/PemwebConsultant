@@ -63,15 +63,42 @@ class CounselingSessionController extends Controller
         return view('sessions.show', compact('session', 'messages'));
     }
 
-    public function finish(CounselingSession $session)
+    public function finish(Request $request, CounselingSession $session)
     {
         if ($session->user_id !== auth()->id()) {
             abort(403, 'Kamu tidak memiliki akses ke sesi ini.');
         }
 
-        $session->update(['status' => 'finished']);
+        $request->validate([
+            'final_mood' => 'nullable|string|in:lebih_tenang,sama_saja,butuh_bantuan',
+        ]);
+
+        $finalMood = $request->final_mood;
+
+        $session->update([
+            'status' => 'finished',
+            'final_mood' => $finalMood,
+            'is_escalated' => $finalMood === 'butuh_bantuan',
+        ]);
 
         return redirect()->route('sessions.index')
-            ->with('success', 'Sesi telah diakhiri. Terima kasih sudah bercerita.');
+            ->with('success', 'Sesi telah diakhiri. Terima kasih sudah berbagi bersama Hexa Space.');
+    }
+
+    public function updateNotes(Request $request, CounselingSession $session)
+    {
+        if (auth()->user()->role !== 'doctor') {
+            abort(403, 'Hanya dokter yang dapat mengakses halaman ini.');
+        }
+
+        $request->validate([
+            'doctor_notes' => 'nullable|string|max:5000',
+        ]);
+
+        $session->update([
+            'doctor_notes' => $request->doctor_notes,
+        ]);
+
+        return back()->with('success', 'Catatan klinis berhasil disimpan.');
     }
 }

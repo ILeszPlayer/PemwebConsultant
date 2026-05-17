@@ -11,6 +11,9 @@ class CounselingSession extends Model
         'counseling_service_id',
         'title',
         'status',
+        'final_mood',
+        'is_escalated',
+        'doctor_notes',
     ];
     
     public function user()

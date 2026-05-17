@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CounselingServiceController;
 use App\Http\Controllers\CounselingSessionController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\DailyJournalController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -24,6 +25,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/sessions/{session}/chat', [ChatController::class, 'store'])->name('chat.store');
 
     Route::get('/doctor/sessions/{session}', [CounselingSessionController::class, 'doctorShow'])->name('doctor.sessions.show');
+    Route::patch('/doctor/sessions/{session}/notes', [CounselingSessionController::class, 'updateNotes'])->name('doctor.sessions.notes');
+
+    Route::post('/journal', [DailyJournalController::class, 'store'])->name('journal.store');
 });
 
 Route::middleware('auth')->group(function () {

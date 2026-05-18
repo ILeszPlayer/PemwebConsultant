@@ -32,28 +32,11 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="mt-6">
-            <x-input-label :value="__('Daftar Sebagai')" />
-            <div class="grid grid-cols-2 gap-3 mt-2">
-                <label class="flex items-center gap-3 p-4 border border-[#E5E7EB] rounded-2xl cursor-pointer transition has-[:checked]:border-[#C084FC] has-[:checked]:bg-[#F8F3FF]">
-                    <input type="radio" name="role" value="user" class="text-[#C084FC] focus:ring-[#C084FC]" {{ old('role', 'user') === 'user' ? 'checked' : '' }}>
-                    <div>
-                        <span class="block text-sm font-medium text-[#374151]">Pasien</span>
-                        <span class="block text-xs text-[#6B7280]">Mendapat layanan konseling</span>
-                    </div>
-                </label>
-                <label class="flex items-center gap-3 p-4 border border-[#E5E7EB] rounded-2xl cursor-pointer transition has-[:checked]:border-[#C084FC] has-[:checked]:bg-[#F8F3FF]">
-                    <input type="radio" name="role" value="doctor" class="text-[#C084FC] focus:ring-[#C084FC]" {{ old('role') === 'doctor' ? 'checked' : '' }}>
-                    <div>
-                        <span class="block text-sm font-medium text-[#374151]">Doktor</span>
-                        <span class="block text-xs text-[#6B7280]">Memantau sesi pasien</span>
-                    </div>
-                </label>
-            </div>
-            <x-input-error :messages="$errors->get('role')" class="mt-2" />
+        <div class="mt-6 text-center text-xs text-[#6B7280] bg-[#F8F3FF] rounded-2xl px-4 py-3">
+            Dengan mendaftar, kamu akan terdaftar sebagai Pasien Hexa Space.
         </div>
 
-        <div class="flex items-center justify-end mt-6">
+        <div class="flex items-center justify-end mt-4">
             <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C084FC]" href="{{ route('login') }}">
                 Sudah punya akun?
             </a>

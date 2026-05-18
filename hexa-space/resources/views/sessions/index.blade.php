@@ -24,12 +24,22 @@
                         <a href="{{ route('sessions.show', $session) }}" class="bg-white rounded-2xl p-6 shadow-sm border border-[#E5E7EB] hover:shadow-md transition block">
                             <div class="flex items-center justify-between">
                                 <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
+                                    <div class="flex items-center gap-2 mb-2 flex-wrap">
                                         <span class="font-semibold text-lg text-[#374151]">{{ $session->title }}</span>
                                         @if($session->status === 'active')
                                             <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#FBCFE8] text-[#BE185D]">Active</span>
                                         @else
                                             <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#E5E7EB] text-[#6B7280]">Selesai</span>
+                                        @endif
+                                        @if($session->is_escalated)
+                                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">Butuh Bantuan</span>
+                                        @endif
+                                        @if($session->final_mood === 'lebih_tenang')
+                                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600">😊 Tenang</span>
+                                        @elseif($session->final_mood === 'sama_saja')
+                                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-600">😐 Sama</span>
+                                        @elseif($session->final_mood === 'butuh_bantuan')
+                                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">🙁 Butuh Bantuan</span>
                                         @endif
                                     </div>
                                     <p class="text-sm text-[#6B7280]">{{ $session->counselingService->name ?? 'Layanan' }}</p>

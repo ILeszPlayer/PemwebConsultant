@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\CounselingSession;
 use App\Models\CounselingService;
+use App\Services\HexaAIService;
 
 class CounselingSessionController extends Controller
 {
@@ -41,18 +42,33 @@ class CounselingSessionController extends Controller
             ->with('success', 'Sesi baru telah dibuat. Selamat bercerita!');
     }
 
-    public function show(CounselingSession $session)
+    public function show(CounselingSession $session, HexaAIService $hexaAI)
     {
-        if ($session->user_id !== auth()->id()) {
+        if ($session->user_id !== auth()->id() && auth()->user()->role !== 'doctor') {
             abort(403, 'Kamu tidak memiliki akses ke sesi ini.');
         }
 
         $messages = $session->chatMessages()->oldest()->get();
 
-        return view('sessions.show', compact('session', 'messages'));
+        $reflectionKeywords = [];
+        $actionSteps = [];
+
+        if ($session->status === 'finished' && auth()->user()->role !== 'doctor') {
+            $reflectionKeywords = $hexaAI->summarizeKeywords($session);
+            $actionSteps = $hexaAI->generateActionSteps($session);
+        }
+
+        $lastAiMessageRaw = $session->chatMessages()
+            ->where('sender', 'ai')
+            ->latest()
+            ->first();
+
+        $lastAiMessage = $lastAiMessageRaw ? \Illuminate\Support\Str::limit(strip_tags($lastAiMessageRaw->message), 300) : '';
+
+        return view('sessions.show', compact('session', 'messages', 'reflectionKeywords', 'actionSteps', 'lastAiMessage'));
     }
 
-    public function doctorShow(CounselingSession $session)
+    public function doctorShow(CounselingSession $session, HexaAIService $hexaAI)
     {
         if (auth()->user()->role !== 'doctor') {
             abort(403, 'Hanya dokter yang dapat mengakses halaman ini.');
@@ -60,10 +76,18 @@ class CounselingSessionController extends Controller
 
         $messages = $session->chatMessages()->oldest()->get();
 
-        return view('sessions.show', compact('session', 'messages'));
+        $reflectionKeywords = [];
+        $actionSteps = [];
+
+        if ($session->status === 'finished') {
+            $reflectionKeywords = $hexaAI->summarizeKeywords($session);
+            $actionSteps = $hexaAI->generateActionSteps($session);
+        }
+
+        return view('sessions.show', compact('session', 'messages', 'reflectionKeywords', 'actionSteps'));
     }
 
-    public function finish(Request $request, CounselingSession $session)
+    public function finish(Request $request, CounselingSession $session, HexaAIService $hexaAI)
     {
         if ($session->user_id !== auth()->id()) {
             abort(403, 'Kamu tidak memiliki akses ke sesi ini.');
@@ -81,8 +105,13 @@ class CounselingSessionController extends Controller
             'is_escalated' => $finalMood === 'butuh_bantuan',
         ]);
 
-        return redirect()->route('sessions.index')
-            ->with('success', 'Sesi telah diakhiri. Terima kasih sudah berbagi bersama Hexa Space.');
+        $reflectionKeywords = $hexaAI->summarizeKeywords($session);
+        $actionSteps = $hexaAI->generateActionSteps($session);
+
+        return redirect()->route('sessions.show', $session)
+            ->with('show_reflection', true)
+            ->with('reflection_keywords', $reflectionKeywords)
+            ->with('action_steps', $actionSteps);
     }
 
     public function updateNotes(Request $request, CounselingSession $session)

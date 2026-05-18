@@ -20,9 +20,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sessions', [CounselingSessionController::class, 'index'])->name('sessions.index');
     Route::post('/sessions', [CounselingSessionController::class, 'store'])->name('sessions.store');
     Route::get('/sessions/{session}', [CounselingSessionController::class, 'show'])->name('sessions.show');
-    Route::patch('/sessions/{session}/finish', [CounselingSessionController::class, 'finish'])->name('sessions.finish');
-
-    Route::post('/sessions/{session}/chat', [ChatController::class, 'store'])->name('chat.store');
+    Route::post('/sessions/{session}/chat', [ChatController::class, 'store'])->name('sessions.chat');
+    Route::patch('/sessions/{session}/finish', [ChatController::class, 'finish'])->name('sessions.finish');
 
     Route::get('/doctor/sessions/{session}', [CounselingSessionController::class, 'doctorShow'])->name('doctor.sessions.show');
     Route::patch('/doctor/sessions/{session}/notes', [CounselingSessionController::class, 'updateNotes'])->name('doctor.sessions.notes');

@@ -23,7 +23,7 @@ class DashboardController extends Controller
                 ->latest()
                 ->get();
 
-            return view('dashboard', compact('totalActive', 'totalFinished', 'escalatedSessions', 'sessions'));
+            return view('doctor.dashboard', compact('totalActive', 'totalFinished', 'escalatedSessions', 'sessions'));
         }
 
         $sessions = CounselingSession::where('user_id', $user->id)

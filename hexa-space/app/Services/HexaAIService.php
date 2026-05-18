@@ -11,6 +11,15 @@ class HexaAIService
 {
     protected string $ethicalDisclaimer = 'Bukan merupakan diagnosis profesional psikologis. Gejala yang mungkin muncul akibat tekanan situasi yang sedang kamu alami.';
 
+    public function generateResponse(int $sessionId, string $message): array
+    {
+        $session = CounselingSession::findOrFail($sessionId);
+        $result = $this->generate($session, $message);
+        return [
+            'message' => $result['text'],
+        ];
+    }
+
     public function generate(CounselingSession $session, string $originalMessage): array
     {
         $conversationHistory = $this->getConversationHistory($session, $originalMessage);

@@ -37,7 +37,7 @@ class ChatController extends Controller
         }
 
         if ($session->status === 'finished') {
-            return redirect()->back()->with('error', 'Sesi bercerita ini sudah diarsipkan dan ditutup.');
+            return redirect()->back()->with('error', 'Sesi bercerita ini sudah diarsipkan.');
         }
 
         $request->validate([
@@ -78,9 +78,9 @@ class ChatController extends Controller
         $session->update([
             'status' => 'finished',
             'final_mood' => $request->final_mood,
-            'is_escalated' => $isEscalated,
+            'is_escalated' => $isEscalated
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Sesi berhasil diarsipkan. Terima kasih telah berani bercerita.');
+        return redirect()->route('dashboard')->with('success', 'Sesi berhasil diarsipkan.');
     }
 }

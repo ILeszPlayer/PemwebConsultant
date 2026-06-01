@@ -93,6 +93,63 @@
                     <p class="text-[#6B7280] mt-2">Selamat datang kembali di Hexa Space. Yuk, tulis jurnal harianmu atau lanjutkan sesi konseling.</p>
                 </div>
 
+                {{-- Quick Actions --}}
+                <div class="flex flex-wrap gap-3 mb-8">
+                    <a href="{{ route('services.index') }}" class="inline-flex items-center gap-2 bg-[#C084FC] hover:bg-[#7E22CE] text-white px-5 py-3 rounded-full font-medium transition shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                        Sesi Baru
+                    </a>
+                    @if($activeSessions > 0)
+                        <a href="{{ route('sessions.index', ['status' => 'active']) }}" class="inline-flex items-center gap-2 bg-rose-400 hover:bg-rose-500 text-white px-5 py-3 rounded-full font-medium transition shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            Lanjutkan Sesi
+                        </a>
+                    @endif
+                    <a href="{{ route('sos.breathing') }}" class="inline-flex items-center gap-2 bg-emerald-400 hover:bg-emerald-500 text-white px-5 py-3 rounded-full font-medium transition shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                        Tenangkan Diri
+                    </a>
+                    <a href="{{ route('journal.index') }}" class="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-white px-5 py-3 rounded-full font-medium transition shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        Riwayat Jurnal
+                    </a>
+                </div>
+
+                {{-- Stats Cards --}}
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#E5E7EB] text-center hover:shadow-md transition">
+                        <div class="text-2xl mb-1">💬</div>
+                        <p class="text-2xl font-bold text-[#374151]">{{ $totalSessions }}</p>
+                        <p class="text-xs text-[#6B7280]">Total Sesi</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#E5E7EB] text-center hover:shadow-md transition">
+                        <div class="text-2xl mb-1">🟣</div>
+                        <p class="text-2xl font-bold text-[#374151]">{{ $activeSessions }}</p>
+                        <p class="text-xs text-[#6B7280]">Sesi Aktif</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#E5E7EB] text-center hover:shadow-md transition">
+                        <div class="text-2xl mb-1">✅</div>
+                        <p class="text-2xl font-bold text-[#374151]">{{ $finishedSessions }}</p>
+                        <p class="text-xs text-[#6B7280]">Sesi Selesai</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#E5E7EB] text-center hover:shadow-md transition">
+                        <div class="text-2xl mb-1">📝</div>
+                        <p class="text-2xl font-bold text-[#374151]">{{ $totalJournals }}</p>
+                        <p class="text-xs text-[#6B7280]">Jurnal</p>
+                    </div>
+                    @if(isset($totalChatMessages))
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#E5E7EB] text-center hover:shadow-md transition col-span-2 md:col-span-4 md:w-auto">
+                        <div class="flex items-center justify-center gap-2">
+                            <span class="text-xl">💭</span>
+                            <div>
+                                <p class="text-2xl font-bold text-[#374151]">{{ $totalChatMessages }}</p>
+                                <p class="text-xs text-[#6B7280]">Total Pesan Terkirim</p>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+
                 {{-- Daily Journal --}}
                 <div class="bg-white rounded-2xl shadow-sm border border-[#E5E7EB] p-6 mb-8">
                     <h2 class="text-lg font-semibold text-[#374151] mb-4">📖 Jurnal Perasaan Hari Ini</h2>

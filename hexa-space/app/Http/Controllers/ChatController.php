@@ -20,7 +20,7 @@ class ChatController extends Controller
     public function show(CounselingSession $session)
     {
         if ($session->user_id !== Auth::id()) {
-            abort(403, 'Kamu tidak memiliki hak akses untuk membuka ruang aman ini.');
+            abort(403, 'Akses ilegal terdeteksi.');
         }
 
         $messages = ChatMessage::where('counseling_session_id', $session->id)
@@ -33,11 +33,11 @@ class ChatController extends Controller
     public function store(Request $request, CounselingSession $session)
     {
         if ($session->user_id !== Auth::id()) {
-            abort(403, 'Aksi ilegal terdeteksi.');
+            abort(403, 'Otorisasi tidak valid.');
         }
 
         if ($session->status === 'finished') {
-            return redirect()->back()->with('error', 'Sesi bercerita ini sudah diarsipkan.');
+            return redirect()->back()->with('error', 'Sesi ini sudah resmi selesai diarsipkan.');
         }
 
         $request->validate([
@@ -51,7 +51,17 @@ class ChatController extends Controller
             'message' => $request->message,
         ]);
 
-        $aiPayload = $this->aiService->generateResponse($session->id, $request->message);
+        $maxRetries = 3;
+        $attempt = 0;
+        $lastAiMessage = ChatMessage::where('counseling_session_id', $session->id)
+            ->where('sender', 'ai')
+            ->latest('id')
+            ->value('message');
+
+        do {
+            $aiPayload = $this->aiService->generateResponse($session->id, $request->message);
+            $attempt++;
+        } while ($attempt < $maxRetries && $aiPayload['message'] === $lastAiMessage);
 
         ChatMessage::create([
             'counseling_session_id' => $session->id,
@@ -73,14 +83,59 @@ class ChatController extends Controller
             'final_mood' => 'required|string',
         ]);
 
-        $isEscalated = ($request->final_mood === 'need_doctor');
-
         $session->update([
             'status' => 'finished',
             'final_mood' => $request->final_mood,
-            'is_escalated' => $isEscalated
+            'is_escalated' => ($request->final_mood === 'need_doctor')
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Sesi berhasil diarsipkan.');
+        return redirect()->route('dashboard')->with('success', 'Sesi berhasil ditutup dengan aman.');
+    }
+
+    public function export(CounselingSession $session)
+    {
+        if ($session->user_id !== Auth::id() && auth()->user()->role !== 'doctor') {
+            abort(403);
+        }
+
+        $messages = ChatMessage::where('counseling_session_id', $session->id)
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $text = "=== Ekspor Chat Hexa Space ===\n";
+        $text .= "Judul: {$session->title}\n";
+        $text .= "Tanggal: {$session->created_at->format('d M Y H:i')}\n";
+        $text .= "Status: {$session->status}\n";
+        $text .= str_repeat('=', 40) . "\n\n";
+
+        foreach ($messages as $msg) {
+            $sender = $msg->sender === 'user' ? 'Kamu' : 'Hexa AI';
+            $time = $msg->created_at->format('d M Y H:i');
+            $text .= "[{$time}] {$sender}:\n{$msg->message}\n\n";
+        }
+
+        $filename = 'chat-hexaspace-' . $session->id . '-' . now()->format('Ymd') . '.txt';
+
+        return response($text, 200, [
+            'Content-Type' => 'text/plain',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function destroyMessage(Request $request, ChatMessage $message)
+    {
+        $session = $message->counselingSession;
+
+        if ($session->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        if ($message->sender !== 'user') {
+            return back()->with('error', 'Hanya bisa menghapus pesan sendiri.');
+        }
+
+        $message->delete();
+
+        return back()->with('success', 'Pesan berhasil dihapus.');
     }
 }

@@ -6,19 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\CounselingSession;
 use App\Models\CounselingService;
-use App\Services\HexaAIService;
+use Illuminate\Support\Facades\Auth;
 
 class CounselingSessionController extends Controller
 {
-    public function index()
-    {
-        $sessions = CounselingSession::where('user_id', auth()->id())
-            ->latest()
-            ->get();
-
-        return view('sessions.index', compact('sessions'));
-    }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -62,6 +53,43 @@ class CounselingSessionController extends Controller
         $messages = $session->chatMessages()->oldest()->get();
 
         return view('sessions.show', compact('session', 'messages'));
+    }
+
+    public function index(Request $request)
+    {
+        $query = CounselingSession::where('user_id', auth()->id());
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhereHas('counselingService', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($status = $request->get('status')) {
+            $query->where('status', $status);
+        }
+
+        $sessions = $query->latest()->get();
+
+        return view('sessions.index', compact('sessions'));
+    }
+
+    public function updateTitle(Request $request, CounselingSession $session)
+    {
+        if ($session->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+        ]);
+
+        $session->update([
+            'title' => $request->title,
+        ]);
+
+        return back()->with('success', 'Judul sesi berhasil diperbarui.');
     }
 
     public function updateNotes(Request $request, CounselingSession $session)

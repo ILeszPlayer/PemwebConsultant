@@ -1,65 +1,76 @@
 <x-app-layout>
     <div class="py-12 bg-[#F8F3FF] min-h-screen">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-8">
+            <div class="flex items-center justify-between mb-8">
                 <h1 class="text-3xl font-bold text-[#374151]">Riwayat Sesi Konseling</h1>
-                <p class="text-[#6B7280] mt-2">Lihat kembali sesi konseling yang pernah kamu lakukan.</p>
+                <a href="{{ route('services.index') }}" class="bg-[#C084FC] hover:bg-[#7E22CE] text-white px-6 py-3 rounded-full font-medium transition shadow-sm">+ Sesi Baru</a>
             </div>
 
-            @if(session('success'))
-                <div class="bg-[#FCE7F3] border border-[#FBCFE8] text-[#BE185D] rounded-2xl px-6 py-4 mb-6">
-                    {{ session('success') }}
-                </div>
-            @endif
+            {{-- Search & Filter --}}
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-[#E5E7EB] mb-6">
+                <form method="GET" class="flex flex-wrap gap-4 items-end">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-sm font-medium text-[#6B7280] mb-1">Cari Sesi</label>
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul atau layanan..." class="w-full border border-[#E5E7EB] rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C084FC]">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-[#6B7280] mb-1">Status</label>
+                        <select name="status" class="border border-[#E5E7EB] rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C084FC]">
+                            <option value="">Semua</option>
+                            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
+                            <option value="finished" {{ request('status') === 'finished' ? 'selected' : '' }}>Selesai</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="bg-[#C084FC] hover:bg-[#7E22CE] text-white px-5 py-2 rounded-xl text-sm font-medium transition">Filter</button>
+                    @if(request('search') || request('status'))
+                        <a href="{{ route('sessions.index') }}" class="text-[#6B7280] hover:text-[#374151] text-sm font-medium px-4 py-2">Reset</a>
+                    @endif
+                </form>
+            </div>
 
-            @if(session('error'))
-                <div class="bg-red-50 border border-red-200 text-red-700 rounded-2xl px-6 py-4 mb-6">
-                    {{ session('error') }}
-                </div>
-            @endif
-
-            @if($sessions->count() > 0)
-                <div class="space-y-4">
-                    @foreach($sessions as $session)
-                        <a href="{{ route('sessions.show', $session) }}" class="bg-white rounded-2xl p-6 shadow-sm border border-[#E5E7EB] hover:shadow-md transition block">
-                            <div class="flex items-center justify-between">
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 mb-2 flex-wrap">
-                                        <span class="font-semibold text-lg text-[#374151]">{{ $session->title }}</span>
-                                        @if($session->status === 'active')
-                                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#FBCFE8] text-[#BE185D]">Active</span>
-                                        @else
-                                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#E5E7EB] text-[#6B7280]">Selesai</span>
-                                        @endif
-                                        @if($session->is_escalated)
-                                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">Butuh Bantuan</span>
-                                        @endif
-                                        @if($session->final_mood === 'lebih_tenang')
-                                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600">😊 Tenang</span>
-                                        @elseif($session->final_mood === 'sama_saja')
-                                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-600">😐 Sama</span>
-                                        @elseif($session->final_mood === 'butuh_bantuan')
-                                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">🙁 Butuh Bantuan</span>
-                                        @endif
-                                    </div>
-                                    <p class="text-sm text-[#6B7280]">{{ $session->counselingService->name ?? 'Layanan' }}</p>
-                                </div>
-                                <div class="text-right text-xs text-[#9CA3AF] shrink-0 ml-4">
-                                    <p>{{ $session->created_at->format('d M Y') }}</p>
-                                    <p>{{ $session->created_at->format('H:i') }}</p>
-                                </div>
+            @forelse($sessions as $session)
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-[#E5E7EB] mb-4 hover:shadow-md transition">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="font-semibold text-lg text-[#374151]">{{ $session->title }}</h3>
+                                @if($session->status === 'active')
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Aktif</span>
+                                @else
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">Selesai</span>
+                                @endif
+                                @if($session->is_escalated)
+                                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">Butuh Bantuan</span>
+                                @endif
                             </div>
-                        </a>
-                    @endforeach
+                            <p class="text-sm text-[#6B7280]">
+                                {{ $session->counselingService->name ?? 'Layanan' }}
+                                &middot; {{ $session->created_at->format('d M Y H:i') }}
+                                @if($session->final_mood)
+                                    &middot; Mood akhir: 
+                                    @if($session->final_mood === 'better') 😊 Lebih Tenang
+                                    @elseif($session->final_mood === 'need_doctor') 🙁 Butuh Dokter
+                                    @endif
+                                @endif
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 ml-4">
+                            @if($session->status === 'active')
+                                <a href="{{ route('sessions.show', $session) }}" class="bg-[#C084FC] hover:bg-[#7E22CE] text-white px-5 py-2 rounded-full text-sm font-medium transition">Lanjutkan</a>
+                            @else
+                                <a href="{{ route('sessions.show', $session) }}" class="bg-gray-100 hover:bg-gray-200 text-[#374151] px-5 py-2 rounded-full text-sm font-medium transition">Lihat</a>
+                            @endif
+                        </div>
+                    </div>
                 </div>
-            @else
-                <div class="bg-white rounded-2xl p-12 shadow-sm border border-[#E5E7EB] text-center">
-                    <div class="text-5xl mb-4">📋</div>
-                    <p class="text-[#6B7280] text-lg mb-2">Belum ada sesi konseling.</p>
-                    <p class="text-[#9CA3AF] text-sm mb-6">Yuk mulai cerita pertamamu bersama Hexa Space.</p>
-                    <a href="{{ route('services.index') }}" class="inline-block bg-[#C084FC] hover:bg-[#7E22CE] text-white px-6 py-3 rounded-full font-medium transition shadow-sm hover:shadow-md">Mulai Konseling</a>
+            @empty
+                <div class="bg-white rounded-2xl p-16 shadow-sm border border-[#E5E7EB] text-center">
+                    <div class="text-6xl mb-4">💬</div>
+                    <h3 class="text-xl font-semibold text-[#374151] mb-2">Belum Ada Sesi Konseling</h3>
+                    <p class="text-[#6B7280] mb-6">Mulai sesi konseling pertamamu dengan Hexa AI.</p>
+                    <a href="{{ route('services.index') }}" class="inline-block bg-[#C084FC] hover:bg-[#7E22CE] text-white px-6 py-3 rounded-full font-medium transition">Mulai Konseling</a>
                 </div>
-            @endif
+            @endforelse
         </div>
     </div>
 </x-app-layout>

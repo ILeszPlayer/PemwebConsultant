@@ -12,6 +12,10 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
         if ($user->role === 'doctor') {
             $totalActive = CounselingSession::where('status', 'active')->count();
             $totalFinished = CounselingSession::where('status', 'finished')->count();
@@ -25,6 +29,14 @@ class DashboardController extends Controller
 
             return view('doctor.dashboard', compact('totalActive', 'totalFinished', 'escalatedSessions', 'sessions'));
         }
+
+        $totalSessions = CounselingSession::where('user_id', $user->id)->count();
+        $activeSessions = CounselingSession::where('user_id', $user->id)->where('status', 'active')->count();
+        $finishedSessions = CounselingSession::where('user_id', $user->id)->where('status', 'finished')->count();
+        $totalJournals = DailyJournal::where('user_id', $user->id)->count();
+        $totalChatMessages = \App\Models\ChatMessage::whereIn('counseling_session_id', function($q) use ($user) {
+            $q->select('id')->from('counseling_sessions')->where('user_id', $user->id);
+        })->count();
 
         $sessions = CounselingSession::where('user_id', $user->id)
             ->latest()
@@ -51,6 +63,6 @@ class DashboardController extends Controller
             $grandTotal += $cnt;
         }
 
-        return view('dashboard', compact('sessions', 'recentJournals', 'moodTotals', 'grandTotal'));
+        return view('dashboard', compact('sessions', 'recentJournals', 'moodTotals', 'grandTotal', 'totalSessions', 'activeSessions', 'finishedSessions', 'totalJournals', 'totalChatMessages'));
     }
 }

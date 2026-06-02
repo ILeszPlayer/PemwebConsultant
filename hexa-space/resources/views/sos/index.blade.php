@@ -41,7 +41,69 @@
                     <p class="text-sm text-indigo-600 mt-1">Teknik kesadaran penuh saat cemas</p>
                     <a href="{{ route('sos.grounding') }}" class="inline-block mt-3 bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-3 rounded-full font-bold text-lg transition shadow-md">Mulai Grounding</a>
                 </div>
+
+                <div class="bg-teal-50 rounded-3xl p-6 border border-teal-200 shadow-sm md:col-span-2">
+                    <div class="flex items-center gap-4">
+                        <div class="text-4xl">🧘</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-teal-700">Meditasi Terpandu</h3>
+                            <p class="text-sm text-teal-600">Dengarkan audio meditasi untuk menenangkan pikiran (5-10 menit)</p>
+                        </div>
+                        <button onclick="startMeditation()" id="meditationBtn" class="shrink-0 bg-teal-500 hover:bg-teal-600 text-white px-6 py-3 rounded-full font-bold text-lg transition shadow-md">
+                            ▶ Mulai Meditasi
+                        </button>
+                    </div>
+                    {{-- Meditation Timer --}}
+                    <div id="meditationTimer" class="hidden mt-6 text-center">
+                        <div class="text-5xl font-bold text-teal-700 mb-2" id="meditationCountdown">05:00</div>
+                        <div class="w-full bg-white/60 rounded-full h-3 overflow-hidden">
+                            <div id="meditationProgress" class="bg-teal-500 h-full rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                        <p class="text-sm text-teal-600 mt-3">Tarik napas dalam-dalam... hembuskan perlahan...</p>
+                        <button onclick="stopMeditation()" class="mt-4 text-teal-700 underline text-sm">Hentikan</button>
+                    </div>
+                </div>
             </div>
+
+            <script>
+                let meditationInterval = null;
+                let meditationTime = 300; // 5 minutes in seconds
+                const totalMeditationTime = 300;
+
+                function startMeditation() {
+                    const btn = document.getElementById('meditationBtn');
+                    const timer = document.getElementById('meditationTimer');
+                    btn.classList.add('hidden');
+                    timer.classList.remove('hidden');
+                    meditationTime = totalMeditationTime;
+                    updateMeditationDisplay();
+                    meditationInterval = setInterval(function() {
+                        meditationTime--;
+                        updateMeditationDisplay();
+                        if (meditationTime <= 0) {
+                            stopMeditation();
+                            alert('🧘 Meditasi selesai! Semoga pikiranmu lebih tenang.');
+                        }
+                    }, 1000);
+                }
+
+                function stopMeditation() {
+                    if (meditationInterval) {
+                        clearInterval(meditationInterval);
+                        meditationInterval = null;
+                    }
+                    document.getElementById('meditationBtn').classList.remove('hidden');
+                    document.getElementById('meditationTimer').classList.add('hidden');
+                }
+
+                function updateMeditationDisplay() {
+                    const min = String(Math.floor(meditationTime / 60)).padStart(2, '0');
+                    const sec = String(meditationTime % 60).padStart(2, '0');
+                    document.getElementById('meditationCountdown').textContent = min + ':' + sec;
+                    const progress = ((totalMeditationTime - meditationTime) / totalMeditationTime) * 100;
+                    document.getElementById('meditationProgress').style.width = progress + '%';
+                }
+            </script>
 
             <div class="bg-white rounded-3xl p-8 shadow-sm border border-[#E5E7EB] text-center">
                 <div class="text-5xl mb-4">💬</div>

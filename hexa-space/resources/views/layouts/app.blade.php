@@ -2,16 +2,39 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
         <meta name="csrf-token" content="{{ csrf_token() }}">
+        <meta name="theme-color" content="#7E22CE">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="Hexa Space">
+        <link rel="manifest" href="/manifest.json">
+        <link rel="apple-touch-icon" href="/icons/icon-192.svg">
 
         <title>Hexa Space - {{ $title ?? 'Ruang Nyaman untuk Pulih dan Bertumbuh' }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
 
         <style>
             [x-cloak] { display: none !important; }
+            * { -webkit-tap-highlight-color: transparent; }
+            ::selection { background: #C084FC; color: white; }
+            ::-webkit-scrollbar { width: 6px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: #d8b4fe; border-radius: 99px; }
+            ::-webkit-scrollbar-thumb:hover { background: #c084fc; }
+
+            /* Page transition */
+            .page-enter { animation: pageFadeIn 0.4s ease-out; }
+            @keyframes pageFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+            main { animation: pageFadeIn 0.4s ease-out; }
+
+            /* Loading spinner utility */
+            .spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid #e5e7eb; border-top-color: #7E22CE; border-radius: 50%; animation: spin 0.6s linear infinite; }
+            .spinner-sm { width: 14px; height: 14px; border-width: 1.5px; }
+            .spinner-lg { width: 32px; height: 32px; border-width: 3px; }
+            @keyframes spin { to { transform: rotate(360deg); } }
         </style>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -125,6 +148,17 @@
             .dark .border-\[\#FBCFE8\] { border-color: #9f1239 !important; }
             .dark .bg-white\/80 { background-color: rgba(30, 41, 59, 0.8) !important; }
             .dark .backdrop-blur-sm { backdrop-filter: blur(4px); }
+            .dark ::selection { background: #7E22CE; color: white; }
+            .dark ::-webkit-scrollbar-thumb { background: #4B5563; }
+            .dark ::-webkit-scrollbar-thumb:hover { background: #6B7280; }
         </style>
+
+        <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+        </script>
     </body>
 </html>

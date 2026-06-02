@@ -6,6 +6,74 @@
                 <p class="text-[#6B7280] mt-2">Semua catatan perasaan yang pernah kamu tulis.</p>
             </div>
 
+            {{-- Streak + Heatmap Row --}}
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                {{-- Streak Card --}}
+                <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 text-white shadow-lg md:col-span-1">
+                    <div class="flex items-center gap-4">
+                        <span class="text-4xl">🔥</span>
+                        <div>
+                            <p class="text-4xl font-bold">{{ $streak }}</p>
+                            <p class="text-purple-200 text-sm font-medium">Hari Streak Jurnal</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-purple-300 mt-3">
+                        @if($streak === 0)
+                            Mulai streak-mu hari ini! Tulis jurnal sekarang.
+                        @elseif($streak === 1)
+                            Hari pertama streak! Lanjutkan besok.
+                        @elseif($streak < 7)
+                            Mantap! {{ $streak }} hari berturut-turut.
+                        @elseif($streak < 30)
+                            Luar biasa! Konsisten selama {{ $streak }} hari.
+                        @else
+                            Legenda! {{ $streak }} hari streak! 🏆
+                        @endif
+                    </p>
+                </div>
+
+                {{-- Calendar Heatmap --}}
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-[#E5E7EB] md:col-span-2">
+                    <h3 class="text-sm font-semibold text-[#374151] mb-3">📅 Kalender Mood (90 Hari)</h3>
+                    <div class="overflow-x-auto">
+                        @php
+                            $weeks = collect($heatmap)->chunk(7);
+                            $dayLabels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+                        @endphp
+                        <div class="flex gap-1">
+                            <div class="flex flex-col gap-1.5 mr-2">
+                                @foreach($dayLabels as $label)
+                                    <div class="w-6 h-6 text-[10px] text-gray-400 flex items-center justify-end">{{ $label }}</div>
+                                @endforeach
+                            </div>
+                            @foreach($weeks as $week)
+                                <div class="flex flex-col gap-1.5">
+                                    @foreach($week as $cell)
+                                        @php $dateObj = \Carbon\Carbon::parse($cell['date']); @endphp
+                                        <div class="relative group">
+                                            <div class="w-6 h-6 rounded-sm {{ $cell['mood'] ? 'shadow-sm ring-1 ring-inset ring-black/5' : '' }}" style="background-color: {{ $cell['color'] }};"></div>
+                                            <div class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none z-10 shadow-lg">
+                                                {{ $dateObj->format('d M') }} — {{ $cell['mood'] ?? '—' }}
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-3 justify-center">
+                        <span class="text-[10px] text-gray-400">Kosong</span>
+                        <div class="w-3 h-3 rounded-sm bg-gray-100"></div>
+                        <div class="w-3 h-3 rounded-sm" style="background-color: #fca5a5"></div>
+                        <div class="w-3 h-3 rounded-sm" style="background-color: #fdba74"></div>
+                        <div class="w-3 h-3 rounded-sm" style="background-color: #fde68a"></div>
+                        <div class="w-3 h-3 rounded-sm" style="background-color: #86efac"></div>
+                        <div class="w-3 h-3 rounded-sm" style="background-color: #c084fc"></div>
+                        <span class="text-[10px] text-gray-400">Terisi</span>
+                    </div>
+                </div>
+            </div>
+
             {{-- Mood Stats Summary --}}
             @if($grandTotal > 0)
                 <div class="bg-white rounded-2xl p-6 shadow-sm border border-[#E5E7EB] mb-8">

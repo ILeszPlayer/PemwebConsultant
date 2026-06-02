@@ -5,16 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\DailyJournal;
+use Carbon\Carbon;
 
 class DailyJournalController extends Controller
 {
     public function index()
     {
-        $journals = DailyJournal::where('user_id', auth()->id())
+        $userId = auth()->id();
+
+        $journals = DailyJournal::where('user_id', $userId)
             ->latest()
             ->get();
 
-        $moodCounts = DailyJournal::where('user_id', auth()->id())
+        $moodCounts = DailyJournal::where('user_id', $userId)
             ->where('created_at', '>=', now()->subDays(30))
             ->selectRaw('mood_emoji, COUNT(*) as count')
             ->groupBy('mood_emoji')
@@ -29,7 +32,7 @@ class DailyJournalController extends Controller
             $grandTotal += $cnt;
         }
 
-        $weeklyMoods = DailyJournal::where('user_id', auth()->id())
+        $weeklyMoods = DailyJournal::where('user_id', $userId)
             ->where('created_at', '>=', now()->subDays(7))
             ->selectRaw('DATE(created_at) as date, mood_emoji')
             ->orderBy('date')
@@ -43,7 +46,40 @@ class DailyJournalController extends Controller
             $weeklyChart[$date] = $avgScore;
         }
 
-        return view('journal.index', compact('journals', 'moodTotals', 'grandTotal', 'weeklyChart'));
+        // Journal streak
+        $streak = 0;
+        $checkDate = Carbon::today();
+        while (DailyJournal::where('user_id', $userId)->whereDate('created_at', $checkDate)->exists()) {
+            $streak++;
+            $checkDate->subDay();
+        }
+
+        // Calendar heatmap — last 90 days
+        $heatmapData = DailyJournal::where('user_id', $userId)
+            ->where('created_at', '>=', now()->subDays(90))
+            ->selectRaw('DATE(created_at) as date, mood_emoji')
+            ->get()
+            ->groupBy('date');
+
+        $moodColors = ['😭' => '#fca5a5', '🙁' => '#fdba74', '😐' => '#fde68a', '🙂' => '#86efac', '😊' => '#c084fc'];
+
+        $heatmap = [];
+        $start = Carbon::today()->subDays(89);
+        for ($i = 0; $i < 90; $i++) {
+            $d = $start->copy()->addDays($i);
+            $key = $d->format('Y-m-d');
+            if (isset($heatmapData[$key])) {
+                $emoji = $heatmapData[$key]->first()->mood_emoji;
+                $heatmap[] = ['date' => $key, 'mood' => $emoji, 'color' => $moodColors[$emoji] ?? '#e5e7eb', 'score' => $moodScore[$emoji] ?? 3];
+            } else {
+                $heatmap[] = ['date' => $key, 'mood' => null, 'color' => '#f3f4f6', 'score' => 0];
+            }
+        }
+
+        return view('journal.index', compact(
+            'journals', 'moodTotals', 'grandTotal', 'weeklyChart',
+            'streak', 'heatmap'
+        ));
     }
 
     public function store(Request $request)

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\CounselingSession;
 use App\Models\DailyJournal;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -63,6 +64,42 @@ class DashboardController extends Controller
             $grandTotal += $cnt;
         }
 
-        return view('dashboard', compact('sessions', 'recentJournals', 'moodTotals', 'grandTotal', 'totalSessions', 'activeSessions', 'finishedSessions', 'totalJournals', 'totalChatMessages'));
+        // Journal streak
+        $streak = 0;
+        $checkDate = Carbon::today();
+        while (DailyJournal::where('user_id', $user->id)->whereDate('created_at', $checkDate)->exists()) {
+            $streak++;
+            $checkDate->subDay();
+        }
+
+        // Daily motivational quote
+        $quotes = [
+            "Kamu tidak sendiri. Setiap langkah kecil yang kamu ambil hari ini adalah kemenangan.",
+            "Berani cerita adalah langkah pertama menuju pemulihan. Kamu hebat!",
+            "Kesehatan mental itu sama pentingnya dengan kesehatan fisik. Jaga dirimu.",
+            "Kamu lebih kuat dari yang kamu kira. Buktinya kamu masih bertahan sampai hari ini.",
+            "Tidak apa-apa untuk tidak baik-baik saja. Yang penting kamu terus berusaha.",
+            "Setiap awan gelap pasti berlalu. Begitu juga dengan masalahmu.",
+            "Kamu berharga dan berhak untuk bahagia. Ingat itu.",
+            "Proses penyembuhan itu tidak linear, dan itu tidak apa-apa.",
+        ];
+        $dailyQuote = $quotes[now()->dayOfYear % count($quotes)];
+
+        $moodScore = ['😭' => 1, '🙁' => 2, '😐' => 3, '🙂' => 4, '😊' => 5];
+        $weeklyMoodScore = 0;
+        $weeklyMoodCount = 0;
+        foreach ($recentJournals as $j) {
+            if (isset($moodScore[$j->mood_emoji])) {
+                $weeklyMoodScore += $moodScore[$j->mood_emoji];
+                $weeklyMoodCount++;
+            }
+        }
+        $avgMoodScore = $weeklyMoodCount > 0 ? round($weeklyMoodScore / $weeklyMoodCount, 1) : null;
+
+        return view('dashboard', compact(
+            'sessions', 'recentJournals', 'moodTotals', 'grandTotal',
+            'totalSessions', 'activeSessions', 'finishedSessions',
+            'totalJournals', 'totalChatMessages', 'streak', 'dailyQuote', 'avgMoodScore'
+        ));
     }
 }

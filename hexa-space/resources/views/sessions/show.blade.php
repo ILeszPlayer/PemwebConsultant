@@ -33,7 +33,7 @@
             <div class="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F8F3FF]/40 scroll-smooth" id="chatContainer">
                 @forelse($messages as $msg)
                     @if($msg->sender === 'user')
-                        <div class="flex justify-end animate-fadeIn group">
+                        <div class="flex justify-end animate-slideInRight group">
                             <div class="max-w-[75%] bg-[#C084FC] text-white px-5 py-3 rounded-2xl rounded-tr-none shadow-sm text-sm font-medium leading-relaxed msg-user-text relative">
                                 <div class="pr-4">{{ $msg->message }}</div>
                                 <div class="text-[10px] text-purple-200 text-right mt-1">{{ $msg->created_at->format('H:i') }}</div>
@@ -48,23 +48,27 @@
                             </div>
                         </div>
                     @else
-                        <div class="flex justify-start animate-fadeIn">
-                            <div class="max-w-[75%] bg-white border border-purple-100 text-gray-800 px-5 py-3 rounded-2xl rounded-tl-none shadow-sm text-sm leading-relaxed flex flex-col">
+                        <div class="flex justify-start animate-slideInLeft">
+                            <div class="max-w-[75%] bg-white border border-purple-100 text-gray-800 px-5 py-3 rounded-2xl rounded-tl-none shadow-sm text-sm leading-relaxed flex flex-col message-ai">
                                 <span class="font-normal text-gray-700 msg-ai-text">{!! nl2br(e($msg->message)) !!}</span>
                                 <div class="flex items-center justify-between pt-2 mt-2 border-t border-purple-100/60">
                                     <span class="text-[10px] text-slate-400 font-normal tracking-wide">
                                         Hexa AI &middot; {{ $msg->created_at->format('H:i') }}
                                     </span>
                                     @if($session->status !== 'finished')
-                                        <div class="flex gap-1">
-                                            <form action="{{ route('chat-messages.feedback', $msg) }}" method="POST">
+                                        <div class="flex items-center gap-1">
+                                            {{-- Emoji Reactions --}}
+                                            <button onclick="toggleReaction(this, '❤️', {{ $msg->id }})" class="text-xs text-gray-400 hover:text-red-400 transition p-1 reaction-btn" data-message-id="{{ $msg->id }}" data-emoji="❤️" title="Reaksi">❤️</button>
+                                            <button onclick="toggleReaction(this, '😊', {{ $msg->id }})" class="text-xs text-gray-400 hover:text-amber-400 transition p-1 reaction-btn" data-message-id="{{ $msg->id }}" data-emoji="😊" title="Reaksi">😊</button>
+                                            <div class="w-px h-4 bg-purple-100 mx-1"></div>
+                                            <form action="{{ route('chat-messages.feedback', $msg) }}" method="POST" class="inline">
                                                 @csrf
                                                 <input type="hidden" name="feedback" value="like">
                                                 <button class="text-xs text-gray-400 hover:text-green-500 transition p-1" title="Bermanfaat">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" /></svg>
                                                 </button>
                                             </form>
-                                            <form action="{{ route('chat-messages.feedback', $msg) }}" method="POST">
+                                            <form action="{{ route('chat-messages.feedback', $msg) }}" method="POST" class="inline">
                                                 @csrf
                                                 <input type="hidden" name="feedback" value="dislike">
                                                 <button class="text-xs text-gray-400 hover:text-red-500 transition p-1" title="Kurang membantu">
@@ -74,12 +78,19 @@
                                         </div>
                                     @endif
                                 </div>
+                                {{-- Reaction display --}}
+                                <div class="flex gap-2 mt-1 reaction-display" data-message-id="{{ $msg->id }}"></div>
                             </div>
                         </div>
                     @endif
                 @empty
-                    <div class="text-center py-12 text-gray-400 text-sm italic">
-                        Belum ada obrolan di sini. Ruang ini sepenuhnya aman untukmu, mulailah menuliskan keluhan atau ceritamu secara bebas...
+                    <div class="flex flex-col items-center justify-center py-16 text-center animate-fadeIn">
+                        <div class="text-7xl mb-6 opacity-60">🌿</div>
+                        <p class="text-gray-400 text-base font-medium mb-2">Belum ada obrolan di sini</p>
+                        <p class="text-gray-400 text-sm max-w-sm leading-relaxed">
+                            Ruang ini sepenuhnya aman untukmu. Mulailah menuliskan apa yang kamu rasakan — 
+                            kakak <span class="text-[#C084FC] font-semibold">Hexa</span> akan selalu mendengarkan tanpa menghakimi.
+                        </p>
                     </div>
                 @endforelse
 
@@ -195,7 +206,18 @@
 
     <style>
         .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+        .animate-slideInRight { animation: slideInRight 0.35s ease-out; }
+        .animate-slideInLeft { animation: slideInLeft 0.35s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+        .message-ai { transition: box-shadow 0.2s; }
+        .message-ai:hover { box-shadow: 0 4px 12px rgba(192, 132, 252, 0.15); }
+        .reaction-btn.active { transform: scale(1.2); }
+        .reaction-btn.active[data-emoji="❤️"] { color: #f43f5e !important; }
+        .reaction-btn.active[data-emoji="😊"] { color: #f59e0b !important; }
+        .reaction-display span { animation: popIn 0.2s ease-out; }
+        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
     </style>
 
     <script>
@@ -410,6 +432,33 @@
         const el = document.getElementById('addictionBarrier');
         el.classList.add('hidden');
         el.classList.remove('flex');
+    }
+
+    // Emoji reactions
+    const reactions = {};
+    function toggleReaction(btn, emoji, messageId) {
+        const key = messageId + '_' + emoji;
+        if (!reactions[key]) {
+            reactions[key] = true;
+            btn.classList.add('active');
+            const display = document.querySelector('.reaction-display[data-message-id="' + messageId + '"]');
+            if (display) {
+                const tag = document.createElement('span');
+                tag.className = 'text-xs bg-purple-50 px-2 py-0.5 rounded-full border border-purple-100 inline-flex items-center gap-1';
+                tag.innerText = emoji;
+                display.appendChild(tag);
+            }
+        } else {
+            reactions[key] = false;
+            btn.classList.remove('active');
+            const display = document.querySelector('.reaction-display[data-message-id="' + messageId + '"]');
+            if (display) {
+                const tags = display.querySelectorAll('span');
+                for (const t of tags) {
+                    if (t.innerText === emoji) { t.remove(); break; }
+                }
+            }
+        }
     }
 
     function openMoodModal() {

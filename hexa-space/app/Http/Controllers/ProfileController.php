@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\CounselingSession;
+use App\Models\DailyJournal;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,9 +17,24 @@ class ProfileController extends Controller
 {
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user = $request->user();
+        $data = ['user' => $user];
+
+        if ($user->role === 'user') {
+            $data['totalSessions'] = CounselingSession::where('user_id', $user->id)->count();
+            $data['activeSessions'] = CounselingSession::where('user_id', $user->id)->where('status', 'active')->count();
+            $data['totalJournals'] = DailyJournal::where('user_id', $user->id)->count();
+
+            $streak = 0;
+            $checkDate = Carbon::today();
+            while (DailyJournal::where('user_id', $user->id)->whereDate('created_at', $checkDate)->exists()) {
+                $streak++;
+                $checkDate->subDay();
+            }
+            $data['streak'] = $streak;
+        }
+
+        return view('profile.edit', $data);
     }
 
     public function update(ProfileUpdateRequest $request): RedirectResponse
